@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, json } from '@remix-run/cloudflare';
-import crypto from 'crypto';
+// Using Web Crypto API instead of Node.js crypto for Cloudflare Pages compatibility
 import type { NetlifySiteInfo } from '~/types/netlify';
 
 interface DeployRequestBody {
@@ -98,13 +98,20 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     }
 
-    // Create file digests
+    // Create file digests using Web Crypto API
     const fileDigests: Record<string, string> = {};
 
     for (const [filePath, content] of Object.entries(files)) {
       // Ensure file path starts with a forward slash
       const normalizedPath = filePath.startsWith('/') ? filePath : '/' + filePath;
-      const hash = crypto.createHash('sha1').update(content).digest('hex');
+      
+      // Use Web Crypto API for SHA1 hashing (compatible with Cloudflare Pages)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(content);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
       fileDigests[normalizedPath] = hash;
     }
 
