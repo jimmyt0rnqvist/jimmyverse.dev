@@ -19,19 +19,19 @@ const menuVariants = {
   closed: {
     opacity: 0,
     visibility: 'hidden',
-    left: '-340px',
+    x: '-100%',
     transition: {
-      duration: 0.2,
-      ease: cubicEasingFn,
+      duration: 0.3,
+      ease: [0.4, 0.0, 0.2, 1], // Smooth easing
     },
   },
   open: {
     opacity: 1,
     visibility: 'initial',
-    left: 0,
+    x: 0,
     transition: {
-      duration: 0.2,
-      ease: cubicEasingFn,
+      duration: 0.3,
+      ease: [0.4, 0.0, 0.2, 1], // Smooth easing
     },
   },
 } satisfies Variants;
@@ -279,18 +279,20 @@ export const Menu = () => {
   }, [open, selectionMode]);
 
   useEffect(() => {
-    const enterThreshold = 40;
-    const exitThreshold = 40;
+    const enterThreshold = 60; // Större zon för att aktivera menyn
+    const exitThreshold = 60; // Större zon för att stänga menyn
 
     function onMouseMove(event: MouseEvent) {
       if (isSettingsOpen) {
         return;
       }
 
-      if (event.pageX < enterThreshold) {
+      // Aktivera menyn när musen är nära vänster kant
+      if (event.clientX < enterThreshold) {
         setOpen(true);
       }
 
+      // Stäng menyn när musen är tillräckligt långt från menyn
       if (menuRef.current && event.clientX > menuRef.current.getBoundingClientRect().right + exitThreshold) {
         setOpen(false);
       }
@@ -324,6 +326,26 @@ export const Menu = () => {
 
   return (
     <>
+      {/* Menu trigger indicator */}
+       <motion.div
+         initial={{ opacity: 0.3 }}
+         animate={{ 
+           opacity: open ? 0 : 0.7,
+           scale: open ? 0.8 : 1
+         }}
+         transition={{ duration: 0.2 }}
+         className="fixed left-4 z-50 pointer-events-none"
+         style={{ 
+           display: isSettingsOpen ? 'none' : 'block',
+           top: 'calc(var(--header-height) + 1rem)'
+         }}
+       >
+         <div className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+           <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+           <span className="text-xs text-gray-600 dark:text-gray-400 font-medium"> Meny</span>
+         </div>
+       </motion.div>
+
       <motion.div
         ref={menuRef}
         initial="closed"
@@ -331,11 +353,15 @@ export const Menu = () => {
         variants={menuVariants}
         style={{ width: '340px' }}
         className={classNames(
-          'flex selection-accent flex-col side-menu fixed top-0 h-full',
+          'flex selection-accent flex-col side-menu fixed h-[calc(100vh-var(--header-height))]',
           'bg-white dark:bg-gray-950 border-r border-gray-100 dark:border-gray-800/50',
-          'shadow-sm text-sm',
+          'shadow-xl text-sm backdrop-blur-sm',
           isSettingsOpen ? 'z-40' : 'z-sidebar',
         )}
+        style={{
+          width: '340px',
+          top: 'var(--header-height)'
+        }}
       >
         <div className="h-12 flex items-center justify-between px-4 border-b border-gray-100 dark:border-gray-800/50 bg-gray-50/50 dark:bg-gray-900/50">
           <div className="text-gray-900 dark:text-white font-medium"></div>

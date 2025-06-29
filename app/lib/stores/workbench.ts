@@ -593,8 +593,20 @@ export class WorkbenchStore {
   }
 
   actionStreamSampler = createSampler(async (data: ActionCallbackData, isStreaming: boolean = false) => {
-    return await this._runAction(data, isStreaming);
-  }, 100); // TODO: remove this magic number to have it configurable
+    const { getOptimizedConfig, PerformanceMonitor } = await import('~/utils/performance-config');
+    const endTiming = PerformanceMonitor.startTiming('action-stream-execution');
+    const result = await this._runAction(data, isStreaming);
+    endTiming();
+    return result;
+  }, (() => {
+    // Use dynamic import to get config at runtime
+    try {
+      const { getOptimizedConfig } = require('~/utils/performance-config');
+      return getOptimizedConfig().ACTION_EXECUTION.STREAM_SAMPLER_DELAY;
+    } catch {
+      return 200; // Fallback value
+    }
+  })());
 
   #getArtifact(id: string) {
     const artifacts = this.artifacts.get();

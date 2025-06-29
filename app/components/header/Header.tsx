@@ -15,12 +15,34 @@ export function Header() {
         'border-bolt-elements-borderColor': chat.started,
       })}
     >
-      <div className="flex items-center gap-2 z-logo text-bolt-elements-textPrimary cursor-pointer">
-        <div className="i-ph:sidebar-simple-duotone text-xl" />
-        <a href="/" className="text-2xl font-semibold text-accent flex items-center">
-          {/* <span className="i-bolt:logo-text?mask w-[46px] inline-block" /> */}
-          <img src="/logo-light-styled.png" alt="logo" className="w-[90px] inline-block dark:hidden" />
-          <img src="/logo-dark-styled.png" alt="logo" className="w-[90px] inline-block hidden dark:block" />
+      <div className="flex items-center gap-3 z-logo text-bolt-elements-textPrimary cursor-pointer">
+        <div className="i-ph:code-duotone text-2xl text-purple-500" />
+        <a href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-blue-500 bg-clip-text text-transparent flex items-center">
+          Jimmyverse.dev
+        </a>
+      </div>
+      
+      {/* Navigation Links */}
+      <div className="flex items-center gap-3 ml-6">
+        <a 
+          href="https://jimmyverseimages.netlify.app" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="px-3 py-2 text-sm bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary border border-bolt-elements-borderColor rounded-md transition-all duration-200 flex items-center gap-2"
+        >
+          <div className="i-ph:image text-base" />
+          Jimmyverse.images
+          <div className="i-ph:arrow-square-out text-xs opacity-60" />
+        </a>
+        <a 
+          href="https://jimmyverse.se/projects" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="px-3 py-2 text-sm bg-bolt-elements-item-backgroundDefault hover:bg-bolt-elements-item-backgroundActive text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary border border-bolt-elements-borderColor rounded-md transition-all duration-200 flex items-center gap-2"
+        >
+          <div className="i-ph:folder-open text-base" />
+          Jimmyverse.projects
+          <div className="i-ph:arrow-square-out text-xs opacity-60" />
         </a>
       </div>
       {chat.started && ( // Display ChatDescription and HeaderActionButtons only when the chat has started.

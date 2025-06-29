@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
+import { IconButton } from '../ui/IconButton';
 import { Checkbox } from '~/components/ui/Checkbox';
 import { toast } from '~/components/ui/use-toast';
+import { getOptimizedConfig, PerformanceMonitor } from '~/utils/performance-config';
 
 interface LockedItem {
   path: string;
@@ -49,7 +51,12 @@ export function LockManager() {
     loadLockedItems();
 
     // Set up an interval to refresh the list periodically
-    const intervalId = setInterval(loadLockedItems, 5000);
+    const config = getOptimizedConfig();
+    const intervalId = setInterval(() => {
+      const endTiming = PerformanceMonitor.startTiming('lock-manager-refresh');
+      loadLockedItems();
+      endTiming();
+    }, config.UI_UPDATES.LOCK_MANAGER_INTERVAL);
 
     return () => clearInterval(intervalId);
   }, []);

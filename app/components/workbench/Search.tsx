@@ -4,6 +4,7 @@ import { workbenchStore } from '~/lib/stores/workbench';
 import { webcontainer } from '~/lib/webcontainer';
 import { WORK_DIR } from '~/utils/constants';
 import { debounce } from '~/utils/debounce';
+import { getOptimizedConfig, PerformanceMonitor } from '~/utils/performance-config';
 
 interface DisplayMatch {
   path: string;
@@ -159,7 +160,14 @@ export function Search() {
     }
   }, []);
 
-  const debouncedSearch = useCallback(debounce(handleSearch, 300), [handleSearch]);
+  const debouncedSearch = useCallback(() => {
+    const config = getOptimizedConfig();
+    return debounce((query: string) => {
+      const endTiming = PerformanceMonitor.startTiming('search-execution');
+      handleSearch(query);
+      endTiming();
+    }, config.DEBOUNCE.SEARCH_DELAY);
+  }, [handleSearch]);
 
   useEffect(() => {
     debouncedSearch(searchQuery);

@@ -36,7 +36,7 @@ export const createChatFromFolder = async (
 
   const filesMessage: Message = {
     role: 'assistant',
-    content: `I've imported the contents of the "${folderName}" folder.${binaryFilesMessage}
+    content: `🚀 Jimmyverse.dev: I've imported the contents of the "${folderName}" folder and I'm setting up the development environment with live preview.${binaryFilesMessage}
 
 <boltArtifact id="imported-files" title="Imported Files" type="bundled" >
 ${fileArtifacts
@@ -60,14 +60,23 @@ ${escapeBoltTags(file.content)}
 
   const messages = [userMessage, filesMessage];
 
-  if (commandsMessage) {
-    messages.push({
-      role: 'user',
-      id: generateId(),
-      content: 'Setup the codebase and Start the application',
-    });
-    messages.push(commandsMessage);
-  }
+  // Always add setup and start commands for Jimmyverse.dev workflow
+  messages.push({
+    role: 'user',
+    id: generateId(),
+    content: '🔧 Jimmyverse.dev: Setup dependencies and start development server for live preview',
+  });
+  
+  // Always create and add commands message, even if detection failed
+  const finalCommandsMessage = commandsMessage || createCommandsMessage({
+    type: 'Unknown',
+    setupCommand: 'npm install',
+    startCommand: 'npm run dev',
+    followupMessage: '🚀 Jimmyverse.dev: Initializing project with default npm workflow...',
+    autoStart: true
+  });
+  
+  messages.push(finalCommandsMessage);
 
   return messages;
 };

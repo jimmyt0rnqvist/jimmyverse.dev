@@ -1,5 +1,6 @@
-import * as React from 'react';
+import React from 'react';
 import { useEffect, useState, useCallback } from 'react';
+import { getOptimizedConfig, PerformanceMonitor } from '~/utils/performance-config';
 import { classNames } from '~/utils/classNames';
 import { Line } from 'react-chartjs-2';
 import {
@@ -382,7 +383,8 @@ const TaskManagerTab: React.FC = () => {
 
   // Effect to update metrics periodically
   useEffect(() => {
-    const updateInterval = 5000; // Update every 5 seconds instead of 2.5 seconds
+    const config = getOptimizedConfig();
+    const updateInterval = config.UI_UPDATES.TASK_MANAGER_INTERVAL;
     let metricsInterval: NodeJS.Timeout;
 
     // Only run updates when tab is visible
@@ -391,7 +393,11 @@ const TaskManagerTab: React.FC = () => {
         clearInterval(metricsInterval);
       } else {
         updateMetrics();
-        metricsInterval = setInterval(updateMetrics, updateInterval);
+        metricsInterval = setInterval(() => {
+          const endTiming = PerformanceMonitor.startTiming('task-manager-metrics');
+          updateMetrics();
+          endTiming();
+        }, updateInterval);
       }
     };
 

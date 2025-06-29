@@ -8,6 +8,7 @@ import { diffLines, type Change } from 'diff';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { toast } from 'react-toastify';
 import { path } from '~/utils/path';
+import { usePerformanceMonitor, useVirtualScrolling, useAdaptivePerformance } from '~/lib/hooks/usePerformanceOptimization';
 
 const logger = createScopedLogger('FileTree');
 
@@ -51,12 +52,22 @@ export const FileTree = memo(
     fileHistory = {},
   }: Props) => {
     renderLogger.trace('FileTree');
+    
+    const { renderCount } = usePerformanceMonitor('FileTree');
+    const { shouldUseVirtualScrolling } = useAdaptivePerformance();
 
     const computedHiddenFiles = useMemo(() => [...DEFAULT_HIDDEN_FILES, ...(hiddenFiles ?? [])], [hiddenFiles]);
 
     const fileList = useMemo(() => {
       return buildFileList(files, rootFolder, hideRoot, computedHiddenFiles);
     }, [files, rootFolder, hideRoot, computedHiddenFiles]);
+    
+    // Virtual scrolling for large file lists
+    const virtualScrollProps = useVirtualScrolling(
+      fileList,
+      24, // Approximate item height
+      400 // Container height
+    );
 
     const [collapsedFolders, setCollapsedFolders] = useState(() => {
       return collapsed

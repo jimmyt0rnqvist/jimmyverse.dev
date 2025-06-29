@@ -1,5 +1,6 @@
 import type { WebContainer } from '@webcontainer/api';
 import { WORK_DIR } from './constants';
+import { getOptimizedConfig, PerformanceMonitor } from './performance-config';
 
 // Global object to track watcher state
 const watcherState = {
@@ -147,12 +148,19 @@ function ensurePollingActive() {
   }
 
   // Set up a polling interval that calls all callbacks
+  const config = getOptimizedConfig();
+  const endTiming = PerformanceMonitor.startTiming('file-watcher-polling');
+  
   watcherState.pollingInterval = setInterval(() => {
+    const callbackEndTiming = PerformanceMonitor.startTiming('file-watcher-callbacks');
+    
     // Call all registered callbacks
     for (const [, callbacks] of watcherState.callbacks.entries()) {
       callbacks.forEach((callback) => callback());
     }
-  }, 3000); // Poll every 3 seconds
+    
+    callbackEndTiming();
+  }, config.FILE_WATCHER.POLLING_INTERVAL);
 
   // Clean up interval when window unloads
   if (typeof window !== 'undefined') {
@@ -183,13 +191,18 @@ export function safeWatchPaths(
     console.info('[FileWatcher] Using fallback polling for watchPaths');
     ensurePollingActive();
 
+    const config = getOptimizedConfig();
     const interval = setInterval(() => {
+      const endTiming = PerformanceMonitor.startTiming('file-watcher-watchpaths');
+      
       // Use our helper to create a valid event
       const mockEvent = createMockEvent();
 
       // Wrap in the expected structure of nested arrays
       callback([[mockEvent]]);
-    }, 3000);
+      
+      endTiming();
+    }, config.FILE_WATCHER.POLLING_INTERVAL);
 
     return {
       close: () => {
@@ -212,13 +225,18 @@ export function safeWatchPaths(
     // Set up polling
     ensurePollingActive();
 
+    const config = getOptimizedConfig();
     const interval = setInterval(() => {
+      const endTiming = PerformanceMonitor.startTiming('file-watcher-watchpaths-fallback');
+      
       // Use our helper to create a valid event
       const mockEvent = createMockEvent();
 
       // Wrap in the expected structure of nested arrays
       callback([[mockEvent]]);
-    }, 3000);
+      
+      endTiming();
+    }, config.FILE_WATCHER.POLLING_INTERVAL);
 
     return {
       close: () => {

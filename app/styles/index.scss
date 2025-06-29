@@ -14,13 +14,17 @@ body {
 }
 
 :root {
-  --gradient-opacity: 0.8;
-  --primary-color: rgba(158, 117, 240, var(--gradient-opacity));
-  --secondary-color: rgba(138, 43, 226, var(--gradient-opacity));
-  --accent-color: rgba(128, 59, 239, var(--gradient-opacity));
-  // --primary-color: rgba(147, 112, 219, var(--gradient-opacity));
-  // --secondary-color: rgba(138, 43, 226, var(--gradient-opacity));
-  // --accent-color: rgba(180, 170, 220, var(--gradient-opacity));
+  --gradient-opacity: 0.9;
+  --primary-color: rgba(139, 92, 246, var(--gradient-opacity)); /* Purple-500 */
+  --secondary-color: rgba(59, 130, 246, var(--gradient-opacity)); /* Blue-500 */
+  --accent-color: rgba(168, 85, 247, var(--gradient-opacity)); /* Purple-600 */
+  --tertiary-color: rgba(34, 197, 94, var(--gradient-opacity)); /* Green-500 */
+  
+  /* Jimmyverse.dev brand colors */
+  --jimmyverse-purple: #8b5cf6;
+  --jimmyverse-blue: #3b82f6;
+  --jimmyverse-cyan: #06b6d4;
+  --jimmyverse-pink: #ec4899;
 }
 
 .modern-scrollbar {

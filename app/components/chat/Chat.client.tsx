@@ -16,6 +16,8 @@ import { DEFAULT_MODEL, DEFAULT_PROVIDER, PROMPT_COOKIE_KEY, PROVIDER_LIST } fro
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger, renderLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat';
+import { usePerformanceMonitor, useThrottledState, useBatchedUpdates } from '~/lib/hooks/usePerformanceOptimization';
+import { getOptimizedConfig } from '~/utils/performance-config';
 import Cookies from 'js-cookie';
 import { debounce } from '~/utils/debounce';
 import { useSettings } from '~/lib/hooks/useSettings';
@@ -116,6 +118,9 @@ interface ChatProps {
 export const ChatImpl = memo(
   ({ description, initialMessages, storeMessageHistory, importChat, exportChat }: ChatProps) => {
     useShortcuts();
+    
+    const { renderCount } = usePerformanceMonitor('ChatImpl');
+    const config = getOptimizedConfig();
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
@@ -133,14 +138,14 @@ export const ChatImpl = memo(
     const supabaseAlert = useStore(workbenchStore.supabaseAlert);
     const { activeProviders, promptId, autoSelectTemplate, contextOptimizationEnabled } = useSettings();
 
-    const [model, setModel] = useState(() => {
+    const [model, setModel] = useThrottledState((() => {
       const savedModel = Cookies.get('selectedModel');
       return savedModel || DEFAULT_MODEL;
-    });
-    const [provider, setProvider] = useState(() => {
+    })(), config.DEBOUNCE.INPUT_DELAY);
+    const [provider, setProvider] = useThrottledState((() => {
       const savedProvider = Cookies.get('selectedProvider');
       return (PROVIDER_LIST.find((p) => p.name === savedProvider) || DEFAULT_PROVIDER) as ProviderInfo;
-    });
+    })(), config.DEBOUNCE.INPUT_DELAY);
 
     const { showChat } = useStore(chatStore);
 
@@ -383,6 +388,9 @@ export const ChatImpl = memo(
         }
 
         // If autoSelectTemplate is disabled or template selection failed, proceed with normal message
+        // For Jimmyverse.dev workflow: automatically add npm install and npm run dev commands
+        const setupCommands = `\n\n<bolt_file_modifications>\n<bolt_action type="shell">\nnpm install\n</bolt_action>\n</bolt_file_modifications>\n\n<bolt_file_modifications>\n<bolt_action type="shell">\nnpm run dev\n</bolt_action>\n</bolt_file_modifications>`;
+        
         setMessages([
           {
             id: `${new Date().getTime()}`,
@@ -397,6 +405,11 @@ export const ChatImpl = memo(
                 image: imageData,
               })),
             ] as any,
+          },
+          {
+            id: `setup-${new Date().getTime()}`,
+            role: 'assistant',
+            content: `I'll help you with that! Let me start by setting up the project dependencies and starting the development server for live preview.${setupCommands}`,
           },
         ]);
         reload();
@@ -424,12 +437,15 @@ export const ChatImpl = memo(
 
       if (modifiedFiles !== undefined) {
         const userUpdateArtifact = filesToArtifacts(modifiedFiles, `${Date.now()}`);
+        // For Jimmyverse.dev workflow: add npm run dev after file modifications
+        const devCommand = `\n\n<bolt_file_modifications>\n<bolt_action type="shell">\nnpm run dev\n</bolt_action>\n</bolt_file_modifications>`;
+        
         append({
           role: 'user',
           content: [
             {
               type: 'text',
-              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${userUpdateArtifact}${finalMessageContent}`,
+              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${userUpdateArtifact}${finalMessageContent}${devCommand}`,
             },
             ...imageDataList.map((imageData) => ({
               type: 'image',
@@ -482,8 +498,20 @@ export const ChatImpl = memo(
       debounce((event: React.ChangeEvent<HTMLTextAreaElement>) => {
         const trimmedValue = event.target.value.trim();
         Cookies.set(PROMPT_COOKIE_KEY, trimmedValue, { expires: 30 });
-      }, 1000),
-      [],
+      }, config.DEBOUNCE.PROMPT_CACHE_DELAY),
+      [config.DEBOUNCE.PROMPT_CACHE_DELAY],
+    );
+    
+    // Batch message updates to prevent excessive re-renders
+    const batchedMessageUpdates = useBatchedUpdates(
+      (updates: Array<{ type: string; data: any }>) => {
+        // Process batched updates here
+        updates.forEach(update => {
+          // Handle different types of updates
+          console.log('Batched update:', update);
+        });
+      },
+      config.ACTION_EXECUTION.BATCH_DELAY
     );
 
     useEffect(() => {

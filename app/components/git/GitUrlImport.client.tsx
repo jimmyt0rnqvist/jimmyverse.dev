@@ -74,7 +74,7 @@ export function GitUrlImport() {
 
           const filesMessage: Message = {
             role: 'assistant',
-            content: `Cloning the repo ${repoUrl} into ${workdir}
+            content: `🚀 Jimmyverse.dev: Successfully cloned ${repoUrl} into ${workdir} and setting up development environment with live preview.
 <boltArtifact id="imported-files" title="Git Cloned Files"  type="bundled">
 ${fileContents
   .map(
@@ -91,14 +91,23 @@ ${escapeBoltTags(file.content)}
 
           const messages = [filesMessage];
 
-          if (commandsMessage) {
-            messages.push({
-              role: 'user',
-              id: generateId(),
-              content: 'Setup the codebase and Start the application',
-            });
-            messages.push(commandsMessage);
-          }
+          // Always add setup and start commands for Jimmyverse.dev workflow
+          messages.push({
+            role: 'user',
+            id: generateId(),
+            content: '🔧 Jimmyverse.dev: Setup dependencies and start development server for live preview',
+          });
+          
+          // Always create and add commands message, even if detection failed
+          const finalCommandsMessage = commandsMessage || createCommandsMessage({
+            type: 'Unknown',
+            setupCommand: 'npm install',
+            startCommand: 'npm run dev',
+            followupMessage: '🚀 Jimmyverse.dev: Initializing Git project with default npm workflow...',
+            autoStart: true
+          });
+          
+          messages.push(finalCommandsMessage);
 
           await importChat(`Git Project:${repoUrl.split('/').slice(-1)[0]}`, messages, { gitUrl: repoUrl });
         }

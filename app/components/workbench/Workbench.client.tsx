@@ -26,6 +26,8 @@ import useViewport from '~/lib/hooks';
 import { PushToGitHubDialog } from '~/components/@settings/tabs/connections/components/PushToGitHubDialog';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { usePreviewStore } from '~/lib/stores/previews';
+import { usePerformanceMonitor, useThrottledState, useOptimizedFileOperations } from '~/lib/hooks/usePerformanceOptimization';
+import { getOptimizedConfig } from '~/utils/performance-config';
 
 interface WorkspaceProps {
   chatStarted?: boolean;
@@ -280,6 +282,10 @@ const FileModifiedDropdown = memo(
 export const Workbench = memo(
   ({ chatStarted, isStreaming, actionRunner, metadata, updateChatMestaData }: WorkspaceProps) => {
     renderLogger.trace('Workbench');
+    
+    const { renderCount } = usePerformanceMonitor('Workbench');
+    const config = getOptimizedConfig();
+    const { debouncedSave } = useOptimizedFileOperations();
 
     const [isSyncing, setIsSyncing] = useState(false);
     const [isPushDialogOpen, setIsPushDialogOpen] = useState(false);
